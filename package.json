@@ -2,9 +2,18 @@
   "private": true,
   "name": "remix-monorepo",
   "license": "MIT",
+  "pkg": {
+    "assets": "build/node_modules/@remix-run/dev/compiler/shims/**/*",
+    "targets": [ "node17-linux-arm64", "node17-macos-arm64", "node17-win-arm64"],
+    "outputPath": "dist",
+    "patches": {
+      "./node_modules/@web-std/stream/src/stream.cjs": ["require(\"stream/web\")", "require('stream').web"]
+    }
+  },
   "scripts": {
     "clean": "git clean -fdX .",
     "build": "rollup -c && tsc -b",
+    "pkg": "pkg -d -c ./package.json ./build/node_modules/@remix-run/dev/cli.js",
     "dev": "yarn build && yarn --cwd ./fixtures/gists-app/ dev",
     "license": "node ./scripts/license.js",
     "publish": "node ./scripts/publish.js",
@@ -91,6 +100,7 @@
     "jsonfile": "^6.0.1",
     "meow": "^7.1.1",
     "netlify": "10.1.1",
+    "pkg": "^5.5.2",
     "prettier": "^2.1.2",
     "prompt-confirm": "^2.0.4",
     "puppeteer": "^9.1.1",

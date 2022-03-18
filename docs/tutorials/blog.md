@@ -9,7 +9,7 @@ We're going to be short on words and quick on code in this quickstart. If you're
 
 <docs-info>💿 Hey I'm Derrick the Remix Compact Disc 👋 Whenever you're supposed to _do_ something you'll see me</docs-info>
 
-This uses TypeScript, but we always pepper the types on after we write the code. This isn't our normal workflow, but some of you aren't using TypeScript so we didn't want to clutter up the code for you. Normally we create the type as we write the code so that we get it right the first time (measure twice, cut once!).
+This tutorial uses TypeScript. Remix can definitely be used without TypeScript. We feel most productive when writing TypeScript, but if you'd prefer to skip the TypeScript syntax, feel free to write your code in JavaScript.
 
 ## Prerequisites
 
@@ -21,32 +21,37 @@ If you want to follow this tutorial locally on your own computer, it is importan
 
 ## Creating the project
 
-💿 Initialize a new Remix project
+<docs-warning>Make sure you are running at least Node v14 or greater</docs-warning>
 
-<docs-warning>
-Make sure you are running at least Node v14 or greater
-</docs-warning>
+💿 Initialize a new Remix project. We'll call ours "blog-tutorial" but you can call it something else if you'd like.
 
 ```sh
-npx create-remix@latest
-# IMPORTANT: Choose "Just the basics", and then "Remix App Server" when prompted
-cd [whatever you named the project]
+npx create-remix --template remix-run/indie-stack blog-tutorial
+```
+
+```
+? Do you want me to run `npm install`? Yes
+...
+? Do you want to run the build/tests/etc to verify things are setup properly? Yes
+```
+
+<docs-info>Running the verify script is optional, but handy.</docs-info>
+
+You can read more about the stacks available in [the stacks docs](/pages/stacks).
+
+We're using [the Indie stack](https://github.com/remix-run/indie-stack), which is a full application ready to deploy to [fly.io](https://fly.io). This includes development tools as well as production-ready authentication and persistence. Don't worry if you're unfamiliar with the tools used, we'll walk you through things as we go.
+
+💿 Now, open the project that was generated in your preferred editor and check the instructions in the `README.md` file. Feel free to read over this. We'll get to the deployment bit later in the tutorial.
+
+💿 Let's start the dev server:
+
+```sh
 npm run dev
 ```
 
-<docs-warning>
-If you are following along with this tutorial, it's important to choose Remix App Server at this stage. If you plan to deploy your app, you may need to update your code before deploying depending on your deployment target. We're going to be reading/writing to the file system and not all setups are compatible with that (for example, Cloudflare Workers and AWS lambda don't have a writable filesystem). When you are ready to deploy, see the `README` in the adapter you choose for platform-specific instructions.
-</docs-warning>
+💿 Open up [http://localhost:3000](http://localhost:3000), the app should be running.
 
-Open up [http://localhost:3000](http://localhost:3000), the app should be running. If you want, take a minute and poke around the starter template, there's a lot of information in there.
-
-If your application is not running properly at [http://localhost:3000](http://localhost:3000) refer to the README.md in the generated project files to see if additional set up is required for your deployment target.
-
-<docs-warning>
-Make sure the `postinstall` script runs before you start the app - if it does not, run it manually (e.g. via `npm run postinstall`).
-</docs-warning>
-
-This might happen if you've added `ignore-scripts = true` to your `npm` configuration or you're using `pnpm` or other package manager that does not automatically run `postinstall` scripts, which Remix relies on.
+If you want, take a minute and poke around the UI a bit. Feel free to create an account and create/delete some notes to get an idea of what's available in the UI out of the box.
 
 ## Your First Route
 
@@ -54,17 +59,26 @@ We're going to make a new route to render at the "/posts" URL. Before we do that
 
 💿 Add a link to posts in `app/routes/index.tsx`
 
-First import `Link` from "remix":
+Go ahead and copy/paste this:
 
 ```tsx
-import { Link } from "remix";
+<div className="mx-auto mt-16 max-w-7xl text-center">
+  <Link
+    to="/posts"
+    className="text-xl text-blue-600 underline"
+  >
+    Blog Posts
+  </Link>
+</div>
 ```
 
-Next, put the link anywhere you like.
+You can put it anywhere you like. I stuck it right above the icons of all the technologies used in the stack:
 
-```tsx
-<Link to="/posts">Posts</Link>
-```
+![Screenshot of the app showing the blog post link](/blog-tutorial/blog-post-link.png)
+
+<docs-info>You may have noticed we're using <a href="https://tailwindcss.com">tailwind</a> classes.</docs-info>
+
+The Remix Indie stack has [tailwind](https://tailwindcss.com) support pre-configured. If you'd prefer to not use tailwind, you're welcome to remove it and use something else. Learn more about your styling options with Remix in [the styling guide](/guides/styling).
 
 Back in the browser go ahead and click the link. You should see a 404 page since we've not created this route yet. Let's create the route now:
 
@@ -79,7 +93,7 @@ touch app/routes/posts/index.tsx
 
 We could have named it just `posts.tsx` but we'll have another route soon and it'll be nice to put them by each other. An index route will render at the folder's path (just like index.html on a web server).
 
-You'll probably see the screen just go blank with `null`. You've got a route but there's nothing there yet. Let's add a component and export it as the default:
+Now if you navigate to the `/posts` route, you'll get an error indicating there's no way to handle the request. That's because we haven't done anything in that route yet! Let's add a component and export it as the default:
 
 💿 Make the posts component
 
@@ -107,24 +121,26 @@ So let's get to it and provide some data to our component.
 
 💿 Make the posts route "loader"
 
-```tsx filename=app/routes/posts/index.tsx lines=[1,3-14,17-18]
+```tsx filename=app/routes/posts/index.tsx lines=[1,3-16,19-20]
 import { json, useLoaderData } from "remix";
 
 export const loader = async () => {
-  return json([
-    {
-      slug: "my-first-post",
-      title: "My First Post",
-    },
-    {
-      slug: "90s-mixtape",
-      title: "A Mixtape I Made Just For You",
-    },
-  ]);
+  return json({
+    posts: [
+      {
+        slug: "my-first-post",
+        title: "My First Post",
+      },
+      {
+        slug: "90s-mixtape",
+        title: "A Mixtape I Made Just For You",
+      },
+    ],
+  });
 };
 
 export default function Posts() {
-  const posts = useLoaderData();
+  const { posts } = useLoaderData();
   console.log(posts);
   return (
     <main>
@@ -138,19 +154,24 @@ Loaders are the backend "API" for their component and it's already wired up for 
 
 💿 Render links to our posts
 
-```tsx filename=app/routes/posts/index.tsx lines=[1,9-15]
-import { json, Link, useLoaderData } from "remix";
+```tsx filename=app/routes/posts/index.tsx lines=[1,9-20] nocopy
+import { Link, json, useLoaderData } from "remix";
 
 // ...
 export default function Posts() {
-  const posts = useLoaderData();
+  const { posts } = useLoaderData();
   return (
     <main>
       <h1>Posts</h1>
       <ul>
-        {posts.map((post) => (
+        {posts.map((post: any) => (
           <li key={post.slug}>
-            <Link to={post.slug}>{post.title}</Link>
+            <Link
+              to={post.slug}
+              className="text-blue-600 underline"
+            >
+              {post.title}
+            </Link>
           </li>
         ))}
       </ul>
@@ -163,37 +184,47 @@ TypeScript is mad, so let's help it out:
 
 💿 Add the Post type and generic for `useLoaderData`
 
-```tsx filename=app/routes/posts/index.tsx lines=[3-6,9,19,23]
-import { json, Link, useLoaderData } from "remix";
+```tsx filename=app/routes/posts/index.tsx lines=[3-6,8-10,13,28]
+import { Link, json, useLoaderData } from "remix";
 
-export type Post = {
+type Post = {
   slug: string;
   title: string;
 };
 
+type LoaderData = {
+  posts: Array<Post>;
+};
+
 export const loader = async () => {
-  const posts: Post[] = [
-    {
-      slug: "my-first-post",
-      title: "My First Post",
-    },
-    {
-      slug: "90s-mixtape",
-      title: "A Mixtape I Made Just For You",
-    },
-  ];
-  return json(posts);
+  return json<LoaderData>({
+    posts: [
+      {
+        slug: "my-first-post",
+        title: "My First Post",
+      },
+      {
+        slug: "90s-mixtape",
+        title: "A Mixtape I Made Just For You",
+      },
+    ],
+  });
 };
 
 export default function Posts() {
-  const posts = useLoaderData<Post[]>();
+  const { posts } = useLoaderData() as LoaderData;
   return (
     <main>
       <h1>Posts</h1>
       <ul>
         {posts.map((post) => (
           <li key={post.slug}>
-            <Link to={post.slug}>{post.title}</Link>
+            <Link
+              to={post.slug}
+              className="text-blue-600 underline"
+            >
+              {post.title}
+            </Link>
           </li>
         ))}
       </ul>
@@ -208,22 +239,22 @@ Hey, that's pretty cool. We get a pretty solid degree of type safety even over a
 
 A solid practice is to create a module that deals with a particular concern. In our case it's going to be reading and writing posts. Let's set that up now and add a `getPosts` export to our module.
 
-💿 Create `app/post.ts`
+💿 Create `app/models/post.server.ts`
 
 ```sh
-touch app/post.ts
+touch app/models/post.server.ts
 ```
 
-We're mostly gonna copy/paste it from our route:
+We're mostly gonna copy/paste stuff from our route:
 
-```tsx filename=app/post.ts
-export type Post = {
+```tsx filename=app/models/post.server.ts
+type Post = {
   slug: string;
   title: string;
 };
 
-export function getPosts() {
-  const posts: Post[] = [
+export async function getPosts(): Promise<Array<Post>> {
+  return [
     {
       slug: "my-first-post",
       title: "My First Post",
@@ -233,20 +264,26 @@ export function getPosts() {
       title: "A Mixtape I Made Just For You",
     },
   ];
-  return posts;
 }
 ```
 
-💿 Update the posts route to use our new posts module
+Note that we're making the `getPosts` function `async` because even though it's not currently doing anything async it will soon!
 
-```tsx filename=app/routes/posts/index.tsx
-import { json, Link, useLoaderData } from "remix";
+💿 Update the posts route to use our new posts module:
 
-import { getPosts } from "~/post";
-import type { Post } from "~/post";
+```tsx filename=app/routes/posts/index.tsx nocopy
+import { Link, json, useLoaderData } from "remix";
+import { getPosts } from "~/models/post.server";
+
+type LoaderData = {
+  // this is a handy way to say: "posts is whatever type getPosts resolves to"
+  posts: Awaited<ReturnType<typeof getPosts>>;
+};
 
 export const loader = async () => {
-  return json(await getPosts());
+  return json<LoaderData>({
+    posts: await getPosts(),
+  });
 };
 
 // ...
@@ -254,40 +291,50 @@ export const loader = async () => {
 
 ## Pulling from a data source
 
-If we were building this for real, we'd want to store our posts in a database somewhere like Postgres, FaunaDB, Supabase, etc. This is a quickstart, so we're just going to use the file system.
+With the Indie Stack, we've got a SQLite database already set up and configured for us, so let's update our Database Schema to handle SQLite. We're using [Prisma](https://prisma.io) to interact with the database, so we'll update that schema and Prisma will take care of updating our database to match the schema for us (as well as generating and running the necessary SQL commands for the migration).
 
-Instead of hard-coding our links, we'll read them from the file system.
+<docs-info>You do not have to use Prisma when using Remix. Remix works great with whatever existing database or data persistence services you're currently using.</docs-info>
 
-💿 Create a "posts/" folder in the root of the project, not in the app directory, but next to it.
+If you've never used Prisma before, don't worry, we'll walk you through it.
 
-```sh
-mkdir posts
+💿 First, we need to update our Prisma schema:
+
+```prisma filename=prisma/schema.prisma nocopy
+// Stick this at the bottom of that file:
+
+model Post {
+  slug     String @id
+  title    String
+  markdown String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 ```
 
-Now add some posts:
+💿 Now let's tell Prisma to update our local database and TypeScript definitions to match this schema change:
 
 ```sh
-touch posts/my-first-post.md
-touch posts/90s-mixtape.md
+npx prisma db push
 ```
 
-Put whatever you want in them, but make sure they've got some "front matter" attributes in them with a title
+💿 Let's seed our database with a couple posts. Open `prisma/seed.ts` and add this to the end of the seed functionality (right before the `console.log`):
 
-```md filename=posts/my-first-post.md
----
-title: My First Post
----
-
+```ts filename=prisma/seed.ts
+const posts = [
+  {
+    slug: "my-first-post",
+    title: "My First Post",
+    markdown: `
 # This is my first post
 
 Isn't it great?
-```
-
-```md filename=posts/90s-mixtape.md
----
-title: 90s Mixtape
----
-
+    `.trim(),
+  },
+  {
+    slug: "90s-mixtape",
+    title: "A Mixtape I Made Just For You",
+    markdown: `
 # 90s Mixtape
 
 - I wish (Skee-Lo)
@@ -307,111 +354,46 @@ title: 90s Mixtape
 - Scar Tissue (Red Hot Chili Peppers)
 - Santa Monica (Everclear)
 - C'mon N' Ride it (Quad City DJ's)
+    `.trim(),
+  },
+];
+
+for (const post of posts) {
+  await prisma.post.upsert({
+    where: { slug: post.slug },
+    update: post,
+    create: post,
+  });
+}
 ```
 
-💿 Update `getPosts` to read from the file system
+<docs-info>Note that we're using `upsert` so you can run the seed script over and over without adding multiple versions of the same post every time.</docs-info>
 
-We'll need a node module for this:
+Great, let's get those posts into the database with the seed script:
 
-```sh
-npm add front-matter
+```
+npx prisma db seed
 ```
 
-```tsx filename=app/post.ts lines=[1-3,11,13-29]
-import path from "path";
-import fs from "fs/promises";
-import parseFrontMatter from "front-matter";
+💿 Now update the `app/models/post.server.ts` file to read from the SQLite database:
 
-export type Post = {
-  slug: string;
-  title: string;
-};
-
-// relative to the server output not the source!
-const postsPath = path.join(__dirname, "..", "posts");
+```ts filename=app/models/post.server.ts
+import { prisma } from "~/db.server";
 
 export async function getPosts() {
-  const dir = await fs.readdir(postsPath);
-  return Promise.all(
-    dir.map(async (filename) => {
-      const file = await fs.readFile(
-        path.join(postsPath, filename)
-      );
-      const { attributes } = parseFrontMatter(
-        file.toString()
-      );
-      return {
-        slug: filename.replace(/\.md$/, ""),
-        title: attributes.title,
-      };
-    })
-  );
+  return prisma.post.findMany();
 }
 ```
 
-This isn't a Node file system tutorial, so you'll just have to trust us on that code. As mentioned before, you could pull this markdown from a database somewhere (which we will show you in a later tutorial).
+<docs-success>Notice we're able to remove the return type, but everything is still fully typed. The TypeScript feature of Prisma is one of its greatest strengths. Less manual typing, but still type safe!</docs-success>
 
-<docs-error>If you did not use the Remix App Server you'll probably need to add an extra ".." on the path. Also note that you can't deploy this demo anywhere that doesn't have a persistent file system.</docs-error>
+<docs-info>The `~/db.server` import is importing the file at `app/db.server.ts`. The `~` is a fancy alias to the `app` directory so you don't have to worry about how many `../../`s to include in your import as you move files around.</docs-info>
 
-TypeScript is gonna be mad at that code, let's make it happy.
+💿 Now that the Prisma client has been updated, we will need to restart our server. So stop the dev server and start it back up again with `npm run dev`.
 
-Since we're reading in a file, the type system has no idea what's in there, so we need a runtime check, for that we'll want an `invariant` method to make runtime checks like this easy.
+<docs-warning>You only need to ever do this when you change the Prisma schema and update the Prisma client. Normally you don't need to restart the dev server during development. Nice that it's so fast though right?</docs-warning>
 
-💿 Ensure our posts have the proper meta data and get type safety
-
-```sh
-npm add tiny-invariant
-```
-
-```tsx filename=app/post.ts lines=[4,11-13,17-21,33-36]
-import path from "path";
-import fs from "fs/promises";
-import parseFrontMatter from "front-matter";
-import invariant from "tiny-invariant";
-
-export type Post = {
-  slug: string;
-  title: string;
-};
-
-export type PostMarkdownAttributes = {
-  title: string;
-};
-
-const postsPath = path.join(__dirname, "..", "posts");
-
-function isValidPostAttributes(
-  attributes: any
-): attributes is PostMarkdownAttributes {
-  return attributes?.title;
-}
-
-export async function getPosts() {
-  const dir = await fs.readdir(postsPath);
-  return Promise.all(
-    dir.map(async (filename) => {
-      const file = await fs.readFile(
-        path.join(postsPath, filename)
-      );
-      const { attributes } = parseFrontMatter(
-        file.toString()
-      );
-      invariant(
-        isValidPostAttributes(attributes),
-        `${filename} has bad meta data!`
-      );
-      return {
-        slug: filename.replace(/\.md$/, ""),
-        title: attributes.title,
-      };
-    })
-  );
-}
-```
-
-Even if you aren't using TypeScript you're going to want that `invariant` check so you know what's wrong, too.
-
-Okay! Back in the UI we should see our list of posts. Feel free to add some more posts, refresh, and watch the list grow.
+With the server up and running again, you should be able to go to `http://localhost:3000/post` and the posts should still be there, but now they're coming from SQLite!
 
 ## Dynamic Route Params
 
@@ -433,8 +415,10 @@ touch app/routes/posts/\$slug.tsx
 ```tsx filename=app/routes/posts/$slug.tsx
 export default function PostSlug() {
   return (
-    <main>
-      <h1>Some Post</h1>
+    <main className="mx-auto max-w-4xl">
+      <h1 className="my-6 border-b-2 text-center text-3xl">
+        Some Post
+      </h1>
     </main>
   );
 }
@@ -444,18 +428,20 @@ You can click one of your posts and should see the new page.
 
 💿 Add a loader to access the params
 
-```tsx filename=app/routes/posts/$slug.tsx lines=[1,3-5,8,11]
-import { json, useLoaderData } from "remix";
+```tsx filename=app/routes/posts/$slug.tsx lines=[1,3-5,8,12]
+import { useLoaderData, json } from "remix";
 
 export const loader = async ({ params }) => {
-  return json(params.slug);
+  return json({ slug: params.slug });
 };
 
 export default function PostSlug() {
-  const slug = useLoaderData();
+  const { slug } = useLoaderData();
   return (
-    <main>
-      <h1>Some Post: {slug}</h1>
+    <main className="mx-auto max-w-4xl">
+      <h1 className="my-6 border-b-2 text-center text-3xl">
+        Some Post: {slug}
+      </h1>
     </main>
   );
 }
@@ -465,58 +451,58 @@ The part of the filename attached to the `$` becomes a named key on the `params`
 
 💿 Let's get some help from TypeScript for the loader function signature.
 
-```tsx filename=app/routes/posts/$slug.tsx lines=[2,4]
-import { json, useLoaderData } from "remix";
+```tsx filename=app/routes/posts/$slug.tsx lines=[1,4]
 import type { LoaderFunction } from "remix";
+import { json, useLoaderData } from "remix";
 
 export const loader: LoaderFunction = async ({
   params,
 }) => {
-  return json(params.slug);
+  return json({ slug: params.slug });
 };
 ```
 
-Now let's actually read the post from the file system.
+Now, let's actually get the post contents from the database by it's slug.
 
 💿 Add a `getPost` function to our post module
 
-Put this function anywhere in the `app/post.ts` module:
+Update the `app/models/post.server.ts` file:
 
-```tsx filename=app/post.ts
-// ...
+```tsx filename=app/models/post.server.ts lines=[3,9-11]
+import { prisma } from "~/db.server";
+
+export type { Post } from "@prisma/client";
+
+export async function getPosts() {
+  return prisma.post.findMany();
+}
+
 export async function getPost(slug: string) {
-  const filepath = path.join(postsPath, slug + ".md");
-  const file = await fs.readFile(filepath);
-  const { attributes } = parseFrontMatter(file.toString());
-  invariant(
-    isValidPostAttributes(attributes),
-    `Post ${filepath} is missing attributes`
-  );
-  return { slug, title: attributes.title };
+  return prisma.post.findUnique({ where: { slug } });
 }
 ```
 
 💿 Use the new `getPost` function in the route
 
-```tsx filename=app/routes/posts/$slug.tsx lines=[3,5,10-11,15,18]
-import { json, useLoaderData } from "remix";
+```tsx filename=app/routes/posts/$slug.tsx lines=[3,8-9,13,17]
 import type { LoaderFunction } from "remix";
-import invariant from "tiny-invariant";
-
-import { getPost } from "~/post";
+import { useLoaderData, json } from "remix";
+import { getPost } from "~/models/post.server";
 
 export const loader: LoaderFunction = async ({
   params,
 }) => {
-  invariant(params.slug, "expected params.slug");
-  return json(await getPost(params.slug));
+  const post = await getPost(params.slug);
+  return json({ post });
 };
 
 export default function PostSlug() {
-  const post = useLoaderData();
+  const { post } = useLoaderData();
   return (
-    <main>
-      <h1>{post.title}</h1>
+    <main className="mx-auto max-w-4xl">
+      <h1 className="my-6 border-b-2 text-center text-3xl">
+        {post.title}
+      </h1>
     </main>
   );
 }
@@ -524,9 +510,45 @@ export default function PostSlug() {
 
 Check that out! We're now pulling our posts from a data source instead of including it all in the browser as JavaScript.
 
-Quick note on that `invariant`. Because `params` comes from the URL, we can't be totally sure that `params.slug` will be defined--maybe you change the name of the file to `$postId.ts`! It's good practice to validate that stuff with `invariant`, and it makes TypeScript happy too.
+Let's make TypeScript happy with our code:
 
-There are a lot of markdown parsers, we'll use "marked" for this tutorial because it's really easy to get working.
+```tsx filename=app/routes/posts/$slug.tsx lines=[4-5,7,12,15,17,21]
+import type { LoaderFunction } from "remix";
+import { useLoaderData, json } from "remix";
+import { getPost } from "~/models/post.server";
+import type { Post } from "~/models/post.server";
+import invariant from "tiny-invariant";
+
+type LoaderData = { post: Post };
+
+export const loader: LoaderFunction = async ({
+  params,
+}) => {
+  invariant(params.slug, `params.slug is required`);
+
+  const post = await getPost(params.slug);
+  invariant(post, `Post not found: ${params.slug}`);
+
+  return json<LoaderData>({ post });
+};
+
+export default function PostSlug() {
+  const { post } = useLoaderData() as LoaderData;
+  return (
+    <main className="mx-auto max-w-4xl">
+      <h1 className="my-6 border-b-2 text-center text-3xl">
+        {post.title}
+      </h1>
+    </main>
+  );
+}
+```
+
+Quick note on that `invariant` for the params. Because `params` comes from the URL, we can't be totally sure that `params.slug` will be defined--maybe you change the name of the file to `$postId.ts`! It's good practice to validate that stuff with `invariant`, and it makes TypeScript happy too.
+
+We also have an invariant for the post. We'll handle the `404` case better later. Keep going!
+
+Now let's get that markdown parsed and rendered to HTML to the page. There are a lot of markdown parsers, we'll use "marked" for this tutorial because it's really easy to get working.
 
 💿 Parse the markdown into HTML
 
@@ -536,63 +558,63 @@ npm add marked
 npm add @types/marked -D
 ```
 
-```tsx filename=app/post.ts lines=[5,11,18,19]
-import path from "path";
-import fs from "fs/promises";
-import parseFrontMatter from "front-matter";
+```tsx filename=app/routes/post/$slug.ts lines=[6,8,18-19,23,29]
+import type { LoaderFunction } from "remix";
+import { useLoaderData, json } from "remix";
+import { getPost } from "~/models/post.server";
+import type { Post } from "~/models/post.server";
 import invariant from "tiny-invariant";
 import { marked } from "marked";
 
-//...
-export async function getPost(slug: string) {
-  const filepath = path.join(postsPath, slug + ".md");
-  const file = await fs.readFile(filepath);
-  const { attributes, body } = parseFrontMatter(
-    file.toString()
-  );
-  invariant(
-    isValidPostAttributes(attributes),
-    `Post ${filepath} is missing attributes`
-  );
-  const html = marked(body);
-  return { slug, html, title: attributes.title };
-}
-```
+type LoaderData = { post: Post; html: string };
 
-💿 Render the HTML in the route
+export const loader: LoaderFunction = async ({
+  params,
+}) => {
+  invariant(params.slug, `params.slug is required`);
 
-```tsx filename=app/routes/posts/$slug.tsx lines=[5]
-// ...
+  const post = await getPost(params.slug);
+  invariant(post, `Post not found: ${params.slug}`);
+
+  const html = marked(post.markdown);
+  return json<LoaderData>({ post, html });
+};
+
 export default function PostSlug() {
-  const post = useLoaderData();
+  const { post, html } = useLoaderData() as LoaderData;
   return (
-    <main dangerouslySetInnerHTML={{ __html: post.html }} />
+    <main className="mx-auto max-w-4xl">
+      <h1 className="my-6 border-b-2 text-center text-3xl">
+        {post.title}
+      </h1>
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </main>
   );
 }
 ```
 
-Holy smokes, you did it. You have a blog.
+Holy smokes, you did it. You have a blog. Check it out! Next, we're gonna make it easier to create new blog posts 📝
 
 ## Creating Blog Posts
 
-Right now our blog posts (and typo fixes) are tied to deploys. While that works and is a simple way to get started, ultimately it's much better to not have to redeploy the whole app for a simple typo change. The idea here is that your posts would be backed by a database, so we need a way to create a new blog post. We're going to be using actions for that.
+Right now, our blog posts just come from seeding the database. Not a real solution, so we need a way to create a new blog post in the database. We're going to be using actions for that.
 
 Let's make a new "admin" section of the app.
 
-💿 Create an admin route
+💿 Create an admin route within the `posts` directory:
 
 ```sh
-touch app/routes/admin.tsx
+touch app/routes/posts/admin.tsx
 ```
 
-```tsx filename=app/routes/admin.tsx
-import { json, Link, useLoaderData } from "remix";
+```tsx filename=app/routes/posts/admin.tsx
+import { Link, useLoaderData } from "remix";
 
-import { getPosts } from "~/post";
-import type { Post } from "~/post";
+import { getPosts } from "~/models/post.server";
+import type { Post } from "~/models/post.server";
 
 export const loader = async () => {
-  return json(await getPosts());
+  return getPosts();
 };
 
 export default function Admin() {
@@ -604,9 +626,7 @@ export default function Admin() {
         <ul>
           {posts.map((post) => (
             <li key={post.slug}>
-              <Link to={`/posts/${post.slug}`}>
-                {post.title}
-              </Link>
+              <Link to={post.slug}>{post.title}</Link>
             </li>
           ))}
         </ul>
@@ -648,11 +668,11 @@ em {
 
 💿 Link to the stylesheet in the admin route
 
-```tsx filename=app/routes/admin.tsx lines=[5,7-9]
+```tsx filename=app/routes/posts/admin.tsx lines=[5,7-9]
 import { Link, useLoaderData } from "remix";
 
-import { getPosts } from "~/post";
-import type { Post } from "~/post";
+import { getPosts } from "~/models/post.server";
+import type { Post } from "~/models/post.server";
 import adminStyles from "~/styles/admin.css";
 
 export const links = () => {
@@ -690,11 +710,11 @@ export default function AdminIndex() {
 }
 ```
 
-If you refresh you're not going to see it yet. Every route inside of `app/routes/admin/` can now render _inside_ of `app/routes/admin.tsx` when their URL matches. You get to control which part of the `admin.tsx` layout the child routes render.
+If you refresh you're not going to see it yet. Every route inside of `app/routes/admin/` can now render _inside_ of `app/routes/posts/admin.tsx` when their URL matches. You get to control which part of the `admin.tsx` layout the child routes render.
 
 💿 Add an outlet to the admin page
 
-```tsx filename=app/routes/admin.tsx lines=[1,21]
+```tsx filename=app/routes/posts/admin.tsx lines=[1,21]
 import { Outlet, Link, useLoaderData } from "remix";
 
 //...
@@ -791,7 +811,7 @@ export async function createPost(post) {
     path.join(postsPath, post.slug + ".md"),
     md
   );
-  return json(await getPost(post.slug));
+  return getPost(post.slug);
 }
 ```
 
@@ -800,7 +820,7 @@ export async function createPost(post) {
 ```tsx filename=app/routes/admin/new.tsx lines=[1,3,5-15]
 import { redirect, Form } from "remix";
 
-import { createPost } from "~/post";
+import { createPost } from "~/models/post.server";
 
 export const action = async ({ request }) => {
   const formData = await request.formData();
@@ -841,7 +861,7 @@ export async function createPost(post: NewPost) {
     path.join(postsPath, post.slug + ".md"),
     md
   );
-  return json(await getPost(post.slug));
+  return getPost(post.slug);
 }
 
 //...
@@ -851,7 +871,7 @@ export async function createPost(post: NewPost) {
 import { Form, redirect } from "remix";
 import type { ActionFunction } from "remix";
 
-import { createPost } from "~/post";
+import { createPost } from "~/models/post.server";
 
 export const action: ActionFunction = async ({
   request,
@@ -891,7 +911,7 @@ export const action: ActionFunction = async ({
   if (!markdown) errors.markdown = true;
 
   if (Object.keys(errors).length) {
-    return json(errors);
+    return errors;
   }
 
   await createPost({ title, slug, markdown });
@@ -970,7 +990,7 @@ export const action: ActionFunction = async ({
   if (!markdown) errors.markdown = true;
 
   if (Object.keys(errors).length) {
-    return json(errors);
+    return errors;
   }
 
   invariant(typeof title === "string");

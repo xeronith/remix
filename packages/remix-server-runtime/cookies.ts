@@ -81,6 +81,7 @@ export function createCookie(
   let { secrets, ...options } = {
     secrets: [],
     path: "/",
+    sameSite: "lax" as const,
     ...cookieOptions,
   };
 
